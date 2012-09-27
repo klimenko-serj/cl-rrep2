@@ -4,6 +4,18 @@
 
 ;;; "cl-rrep2" goes here. Hacks and glory await!
 ;;-----------------------------------------------------------------------------------------------
+(defun recmap (fnp fn lst)
+  (mapcar #'(lambda (x)
+	      (cond  
+		((atom x) x)
+		((funcall fnp x) (funcall fn x))
+		(T (recmap fnp fn x))))
+	  lst))
+;;-----------------------------------------------------------------------------------------------
+(defmacro fnp-car-eq (eqsymb)
+  `#'(lambda (x) 
+       (eq (car x) ,eqsymb)))
+;;-----------------------------------------------------------------------------------------------
 (defun strlist2str (l)
   (cond ((NULL l) "")
 	((atom l) (format nil "~a" l))
@@ -153,15 +165,19 @@
 	(T Nil)))
 ;;-----------------------------------------------------------------------------------------------
 (defun update-macros (report macros)
-  (cond ((NULL report) Nil)
-	((atom (car report))
-	 (cons (car report) (update-macros (cdr report) macros)))
-	((eq (caar report) :macro)
-	 (cons (getf macros (cadar report))
-	       (update-macros (cdr report) macros)))
-	(T
-	 (cons (update-macros (car report) macros)
-	       (update-macros (cdr report) macros)))))
+  (recmap (fnp-car-eq :macro) 
+	  #'(lambda (x)
+	      (getf macros (cadr x)))
+	  report))
+  ;; (cond ((NULL report) Nil)
+  ;; 	((atom (car report))
+  ;; 	 (cons (car report) (update-macros (cdr report) macros)))
+  ;; 	((eq (caar report) :macro)
+  ;; 	 (cons (getf macros (cadar report))
+  ;; 	       (update-macros (cdr report) macros)))
+  ;; 	(T
+  ;; 	 (cons (update-macros (car report) macros)
+  ;; 	       (update-macros (cdr report) macros)))))
 ;;-----------------------------------------------------------------------------------------------
 (defun rcfg-get-macros (rcfg)
   (getf rcfg :macros))
@@ -174,14 +190,19 @@
 ;; DBREADER
 ;;-----------------------------------------------------------------------------------------------
 (defun rrep-update-by-query-result (qname qvals body)
-  (cond ((NULL body) Nil)
-	((atom (car body))
-	 (cons (car body) (rrep-update-by-query-result qname qvals (cdr body))))
-	((eq (caar body) qname)
-	 (cons (getf qvals (cadar body))
-	       (rrep-update-by-query-result qname qvals (cdr body))))
-	(T (cons (rrep-update-by-query-result qname qvals (car body))
-		 (rrep-update-by-query-result qname qvals (cdr body))))))
+  (recmap (fnp-car-eq qname) 
+	  #'(lambda (x)
+	      (getf qvals (cadr x)))
+	  body))
+
+  ;; (cond ((NULL body) Nil)
+  ;; 	((atom (car body))
+  ;; 	 (cons (car body) (rrep-update-by-query-result qname qvals (cdr body))))
+  ;; 	((eq (caar body) qname)
+  ;; 	 (cons (getf qvals (cadar body))
+  ;; 	       (rrep-update-by-query-result qname qvals (cdr body))))
+  ;; 	(T (cons (rrep-update-by-query-result qname qvals (car body))
+  ;; 		 (rrep-update-by-query-result qname qvals (cdr body))))))
 ;;-----------------------------------------------------------------------------------------------
 (defun make-p-list (Lvars Lvals)
   (cond
@@ -205,7 +226,8 @@
 	((atom (car report))
 	 (cons (car report) (update-queryes-rec (cdr report) db)))
 	((eq (caar report) :query)
-	 (append (update-queryes-rec (rrep-with-query (cdar report) db) db)  (update-queryes-rec (cdr report) db)))
+	 (append (update-queryes-rec (rrep-with-query (cdar report) db) db)  
+		 (update-queryes-rec (cdr report) db)))
 	(T
 	 (cons (update-queryes-rec (car report) db)
 	       (update-queryes-rec (cdr report) db)))))
@@ -220,9 +242,36 @@
 ;;-----------------------------------------------------------------------------------------------
 (defun rcfg-get-db (rcfg)
   (getf rcfg :database))
-	       
 
-  
+
+;;-----------------------------------------------------------------------------------------------
+;; (defun update-by-list (list-name report params)
+;;   (cond ((NULL body) Nil)
+;; 	((atom (car body))
+;; 	 (cons (car body) (update-by-list list-name (cdr body) params)))
+;; 	((eq (caar body) list-name)
+;; 	 (cons (getf  (cadar body))
+;; 	       (rrep-update-by-query-result qname qvals (cdr body))))
+;; 	(T (cons (rrep-update-by-query-result qname qvals (car body))
+;; 		 (rrep-update-by-query-result qname qvals (cdr body))))))
+;; ;;-----------------------------------------------------------------------------------------------
+;; (defun update-params (report params)
+;;   (cond ((NULL report) Nil)
+;; 	((atom (car report))
+;; 	 (cons (car report) (update-params (cdr report) params)))
+;; 	((eq (caar report) :param)
+;; 	 (cons (getf params (cadar report))
+;; 	       (update-params (cdr report) params)))
+;; 	((eq (caar report) :param-list)
+;; 	 (append (update-params 
+;; 		  (update-by-list (cadar report) (cddar report) params)
+;; 		  params)
+;; 		 (update-params (cdr report) params)))
+;; 	(T
+;; 	 (cons (update-params (car report) params)
+;; 	       (update-params (cdr report) params)))))
+;;-----------------------------------------------------------------------------------------------
+
 	
 
 
