@@ -3,25 +3,24 @@
 (defun rcfg-get-name (rcfg)
   (getf rcfg :name))
 ;;------------------------------------------------------------------------------
-(eval-when (:compile-toplevel :load-toplevel :execute)
+(eval-when (:compile-toplevel)
   (defparameter *resources-dir*
     (merge-pathnames "resources/"
                      (asdf:component-pathname (asdf:find-system '#:cl-rrep2))))
   (closure-template:compile-template :common-lisp-backend
                                      (merge-pathnames "cl-rrep2.tmpl"
-                                                      *resources-dir*))
-  (defparameter *rcfg-dir*
-    (merge-pathnames "rcfg/"
-                     (asdf:component-pathname (asdf:find-system '#:cl-rrep2)))))
+                                                      *resources-dir*)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *rcfg-dir* (merge-pathnames "rcfg/" (first (directory "")))))
 ;;------------------------------------------------------------------------------
 (defparameter *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
 ;;------------------------------------------------------------------------------
-(defun reload-reports ()
+(defun reload-reports (&optional (dir *rcfg-dir*))
   (progn
     (setf *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
     (mapcar (lambda (x)
 	      (vector-push-extend (load-rcfg-from-file x) *rcfgs*))
-	    (directory (merge-pathnames "*.rcfg" *rcfg-dir*)))))
+	    (directory (merge-pathnames "*.rcfg" dir)))))
 ;;------------------------------------------------------------------------------
 (defun build-params-forms-list (params)
   (mapparams 
