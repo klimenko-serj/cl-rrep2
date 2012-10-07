@@ -1,0 +1,58 @@
+
+{namespace cl-rrep2.view}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Main template
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template main-frame}
+ <html lang="ru" xml:lang="ru">
+    <head>
+       <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+            <meta name="keywords" content="rrep" />
+
+            {if $title}
+                <title>{$title}</title>
+            {/if}
+    
+    </head>
+ <body>
+   <H1> Reports: </h1>
+   <ul>
+       {foreach $item in $reports}
+        <li>
+         <a href="{$item.href}"><B>{$item.name}</B></a>
+        </li>
+       {/foreach}
+   </ul>
+ </body>
+</html>
+{/template}
+
+{template param-text}
+<p>
+ {$caption |noAutoescape} <input type='text' name='{$key}'>
+</p>
+{/template}
+
+{template param-list}
+<table>
+	<tr><td collspan = 2>{$caption |noAutoescape}</td></tr>
+	{foreach $item in $list}
+   	 <tr>
+	  <td> <input type='checkbox' name='{$key}' value='{$item.key}'></td>
+	  <td> {$item.caption} </td>
+	 </tr>
+	{/foreach}
+</table>
+{/template}
+
+{template params-form}
+ <H1> Params </H1>
+ <form action="" method="post">
+       {foreach $item in $params}
+	  {$item |noAutoescape}
+       {/foreach}
+       <input type="submit" value ="Go!">
+ </form>
+{/template}

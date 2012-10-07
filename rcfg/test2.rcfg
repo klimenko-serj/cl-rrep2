@@ -1,0 +1,28 @@
+(:name "Тестовый отчет №2"
+ :database (:host "localhost"
+	    :path "/work/db1.fdb"				
+	    :user-name "SYSDBA"
+	    :password "masterkey")
+ :macros ()
+ :params (
+ 	  :A (:default ((:query "SELECT * FROM T2" T1 (:a1 :a2)
+	 		      (:a2 (T1 :a1) :A1 (T1 :a2))))
+	      :read-form (:type :checklist 
+	                  :caption "<B>Содержание:</B>"
+	 		  :list 
+			   ((:query "SELECT * FROM T2" T1 (:a1 :a2)
+			      (:key (T1 :a2) 
+			       :caption (T1 :a2)
+			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))) 
+ :report 
+      ("<H1> Тестовый отчет №2 </H1>"
+       (:param :A "<H2>" (:A :a1) "</H2>")
+       (:table :vertical
+        (:param :A
+	 (:query ("SELECT * FROM T1 WHERE id = " (:A :a2)) 
+	   :T1  (:id :name)
+	   (:layout :horizontal
+	     (:cell :value (:T1 :id))
+	     (:cell :value (:A :a1))
+	     (:cell :value ("<B>" (:T1 :name) "</B>"))))))))
+	    
