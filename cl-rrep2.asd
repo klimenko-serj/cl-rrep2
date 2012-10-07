@@ -5,6 +5,8 @@
   :description "Describe cl-rrep2 here"
   :author "Klimenko Serj <klimenko.serj@gmail.com>"
   :license "MIT"
+  :depends-on (#:restas #:closure-template #:cl-fbclient)
   :components ((:file "package")
-               (:file "cl-rrep2")))
+               (:file "cl-rrep2")
+	       (:file "cl-rrep2.web")))
 
