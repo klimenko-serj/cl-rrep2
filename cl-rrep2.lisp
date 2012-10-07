@@ -37,11 +37,23 @@
   (if (stringp q) q
       (strlist2str q)))
 ;;------------------------------------------------------------------------------
+;; RCFG
 ;;------------------------------------------------------------------------------
-;;------------------------------------------------------------------------------
+(defun load-rcfg-from-file (file)
+  (with-open-file (fs file)
+    (read fs)))
 ;;------------------------------------------------------------------------------
 (defun rcfg-get-report (rcfg)
   (getf rcfg :report))
+;;------------------------------------------------------------------------------
+(defun rcfg-get-macros (rcfg)
+  (getf rcfg :macros))
+;;------------------------------------------------------------------------------
+(defun rcfg-get-db (rcfg)
+  (getf rcfg :database))
+;;------------------------------------------------------------------------------
+(defun rcfg-get-params (rcfg)
+  (getf rcfg :params))
 ;;------------------------------------------------------------------------------
 ;; TABLES (layouts)
 ;;------------------------------------------------------------------------------
@@ -193,15 +205,8 @@
 	      (getf macros (cadr x)))
 	  report))
 ;;------------------------------------------------------------------------------
-(defun rcfg-get-macros (rcfg)
-  (getf rcfg :macros))
-;;------------------------------------------------------------------------------
-;;------------------------------------------------------------------------------
 ;;------------------------------------------------------------------------------
 ;; DBREADER
-;;------------------------------------------------------------------------------
-(defun rcfg-get-db (rcfg)
-  (getf rcfg :database))
 ;;------------------------------------------------------------------------------
 (defun rrep-update-by-query-result (qname qvals body)
   (recmap (fnp-car-eq qname) 
@@ -273,9 +278,6 @@
 	      (update-by-param (cddr x) (cadr x) params))
 	  report))
 ;;------------------------------------------------------------------------------
-(defun rcfg-get-params (rcfg)
-  (getf rcfg :params))
-;;------------------------------------------------------------------------------
 (defun mapparams (fn params)
   (cond ((null params) nil)
 	(T (cons (funcall fn (car params) (cadr params))
@@ -286,14 +288,6 @@
 	(T (nconc (funcall fn (car params) (cadr params))
 		 (mapparamsn fn (cddr params))))))
 ;;------------------------------------------------------------------------------
-(defun append-params-by-defaults-params-list (params rcfg-params)
-  (mapparamsn 
-   (lambda (name val)
-     (if (getf params name)
-	 (list name (getf params name))
-	 (list name (getf val :default))))
-   rcfg-params))
-;;------------------------------------------------------------------------------
 (defun get-updated-params (rcfg)
   (update-queryes
     (update-macros (rcfg-get-params rcfg)
@@ -301,13 +295,12 @@
     (rcfg-get-db rcfg)))
 ;;------------------------------------------------------------------------------
 (defun append-params-by-defaults (params rcfg)
-  (append-params-by-defaults-params-list
-   params
+  (mapparamsn 
+   (lambda (name val)
+     (if (getf params name)
+	 (list name (getf params name))
+	 (list name (getf val :default))))
    (get-updated-params rcfg)))
-   ;; (update-queryes
-   ;;  (update-macros (rcfg-get-params rcfg)
-   ;; 		   (rcfg-get-macros rcfg))
-   ;;  (rcfg-get-db rcfg))))
 ;;------------------------------------------------------------------------------
 (defun generate-html-report (rcfg params)
  (generate-html-report-rec
@@ -317,45 +310,6 @@
      (append-params-by-defaults params rcfg))
     (rcfg-get-db rcfg))))
 ;;------------------------------------------------------------------------------
-;; (defun build-param-form (name read-form)
-;;   (case (getf read-form :type)
-;;     (:text (values 
-;; 	    (format nil 
-;; 		    "~A: <input type='text' id='~A'>" 
-;; 		    (getf read-form :caption)
-;; 		    name)
-;; 	    (format nil 
-;; 		    "params+=':~A \"' + document.getElementById('~A').value + '\" ';" 
-;; 		    name name)))
-;;     (:checklist 
-;;      (values "" ""))))
-;; ;;двойные кавычки в значении параметра?
-;;------------------------------------------------------------------------------
-;; (defun generate-param-form (rcfg)
-;;   (let ((html "") (js ""))
-;;     (mapparams (lambda (name val)
-;; 		 (multiple-value-bind (html-p js-p) 
-;; 		     (build-param-form name (getf val :read-form))
-;; 		   (setf html (concatenate 'string html "<p>"  html-p "</p>"))
-;; 		   (setf js (concatenate 'string js js-p))))
-;; 	       (get-updated-params rcfg))
-;;     (format nil "~A
-;; <a href='#' onclick='send_params()'>BUILD</a>~%
-;; <form method='post' action=''>
-;; <input type='hidden' value='' name='params_list' id='rrep_params_list'>
-;; </form>
-;; <script type=\"text/javascript\">
-;; function send_params(){
-;; var params=\"\";
-;; ~A
-;; document.getElementById('rrep_params_list').value = '(' + params + ')';
-;; document.forms[0].submit();
-;; }
-;; </script>" html js)))
-;;------------------------------------------------------------------------------
-(defun load-rcfg-from-file (file)
-  (with-open-file (fs file)
-    (read fs)))
 ;;------------------------------------------------------------------------------
 
   
