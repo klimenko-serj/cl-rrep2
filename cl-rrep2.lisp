@@ -40,7 +40,7 @@
 ;; RCFG
 ;;------------------------------------------------------------------------------
 (defun load-rcfg-from-file (file)
-  (with-open-file (fs file)
+  (with-open-file (fs file :external-format :UTF-8)
     (read fs)))
 ;;------------------------------------------------------------------------------
 (defun rcfg-get-report (rcfg)
