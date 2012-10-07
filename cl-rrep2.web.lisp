@@ -37,8 +37,6 @@
    params))
 ;;------------------------------------------------------------------------------
 (defun get-params-from-post-params (params post-params)
- ; (with-output-to-string (str)
- ;   (print post-params str)))
  (mapparamsn
   (lambda (name val)
     (case (getf (getf val :read-form) :type)
@@ -53,9 +51,7 @@
 				       post-params :test #'equal)
 			       (getf x :value)
 			       Nil))
-			   
 			 (getf (getf val :read-form) :list)))))))
-		
   params))
 ;;------------------------------------------------------------------------------
 (defun generate-param-form (rcfg)
@@ -66,7 +62,6 @@
   (generate-param-form (elt *rcfgs* (parse-integer id))))
 ;;------------------------------------------------------------------------------
 (restas:define-route rrep-build ("/:id" :method :post)
-;  (format nil "~A"
   (generate-html-report 
    (elt *rcfgs* (parse-integer id))
    (get-params-from-post-params (get-updated-params 
@@ -76,10 +71,10 @@
 (restas:define-route rrep-main ("")
   (cl-rrep2.view:main-frame 
    (list :title "rrep" 
-	 :reports (loop for i from 0 to (- (length *rcfgs*) 1)
-		       collect (list :name (rcfg-get-name (elt *rcfgs* i))
-				     :href (restas:genurl 'rrep-param :id i)))
-	 )))
+	 :reports 
+	 (loop for i from 0 to (- (length *rcfgs*) 1)
+	    collect (list :name (rcfg-get-name (elt *rcfgs* i))
+			  :href (restas:genurl 'rrep-param :id i))))))
 ;;------------------------------------------------------------------------------
 (defun rrep2.web-start (&optional (port 8080))
   (progn

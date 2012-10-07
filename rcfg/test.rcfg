@@ -17,17 +17,21 @@
 			       :caption (T1 :a2)
 			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))) 
  :report 
-      ("<H1> REPORT - Test </H1>"
-       (:param :A
+      ("<CENTER><H1> Тестовый отчет №1 </H1></CENTER>"
+        (:param :A
 	"<H2>" (:A :a1) ":" (:A :a2) "</H2>"
 	(:table :vertical
- 	 (:query ("SELECT * FROM " (:macro :T1) " WHERE id <= " (:A :a2)) 
+	 (:summator :ids :clear)
+	 (:query ("SELECT * FROM " (:macro :T1) " WHERE id <= " (:A :a2)) 
 	   :T1  (:id :name)
 	   (:layout :horizontal
 	     (:cell :value (:param :B))
 	     (:cell :value ("ID:" (:T1 :id)))
 	     (:cell :value (:T1 :name))
+	     (:summator :ids :add (:T1 :id))
 	     (:layout :vertical
 	      (:query ("SELECT val FROM T2 WHERE t1_id = " (:T1 :id))
 	        :T2 (:val)
-	        (:cell :value (:T2 :val))))))))))
+	        (:cell :value (:T2 :val))))))
+	 (:cell :stretch 4 :value ("<CENTER>" (:summator :ids) "</CENTER>"))))
+ 	 ))

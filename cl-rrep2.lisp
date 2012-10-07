@@ -100,11 +100,20 @@
   `(if (eq (orientation ,lay) :vertical) 
        ,@body))
 ;;------------------------------------------------------------------------------
-(defmethod initialize-instance :after ((cell table-cell) &key params)
+(defmethod initialize-instance :after 
+    ((cell table-cell) &key parent-orientation params)
   (progn 
     (setf (value cell) (getf params :value))
-    (setf (width cell) 1)
-    (setf (height cell) 1)))
+    (setf (width cell) 
+	  (if (eq parent-orientation :vertical) 
+	      (or (getf params :stretch)
+		  1)
+	      1))
+    (setf (height cell)
+	  (if (eq parent-orientation :horizontal) 
+	      (or (getf params :stretch)
+		  1)
+	      1))))
 ;;------------------------------------------------------------------------------
 (defun set-width-height-one (lay)
   (if-orient-vh lay
@@ -123,9 +132,11 @@
 	     (setf (height itm) (height lay))
 	     (update-size itm))))))
 ;;------------------------------------------------------------------------------
-(defun process-item (itm)
+(defun process-item (itm parent-orientation)
   (cond ((eq (car itm) :cell)
-	 (make-instance 'table-cell :params (cdr itm)))
+	 (make-instance 'table-cell 
+			:parent-orientation parent-orientation 
+			:params (cdr itm)))
 	((eq (car itm) :layout)
 	 (make-instance 'table-layout 
 			:orientation (car (cdr itm)) 
@@ -149,9 +160,8 @@
 (defmethod initialize-instance :after ((lay table-layout) &key items)
   (progn 
     (set-width-height-one lay)
-    
     (loop for itm in items do
-	 (add-item lay (process-item itm)))
+	 (add-item lay (process-item itm (orientation lay))))
     (update-layout-stretch lay)))
 ;;------------------------------------------------------------------------------
 (defun make-table-main-layout (params)
@@ -302,18 +312,28 @@
 	 (list name (getf val :default))))
    (get-updated-params rcfg)))
 ;;------------------------------------------------------------------------------
+;; SUMMATORs
+;;------------------------------------------------------------------------------
+(defun update-summators (report)
+  (let ((summators (make-hash-table)))
+    (recmapn 
+     (fnp-car-eq :summator)
+     (lambda (x)
+       (cond 
+	 ((NULL (cddr x)) (list (gethash (cadr x) summators)))
+	 ((eq (caddr x) :clear) (setf (gethash (cadr x) summators) 0))
+	 ((eq (caddr x) :add) (incf (gethash (cadr x) summators) (cadddr x)))
+	 ((eq (caddr x) :set) (setf (gethash (cadr x) summators) (cadddr x)))))
+     report)))
+;;------------------------------------------------------------------------------
+;; MAIN: GENERATE-HTML-REPORT	  
+;;------------------------------------------------------------------------------
 (defun generate-html-report (rcfg params)
  (generate-html-report-rec
+  (update-summators
    (update-queryes 
     (update-params 
      (update-macros (rcfg-get-report rcfg) (rcfg-get-macros rcfg))
      (append-params-by-defaults params rcfg))
-    (rcfg-get-db rcfg))))
+    (rcfg-get-db rcfg)))))
 ;;------------------------------------------------------------------------------
-;;------------------------------------------------------------------------------
-
-  
-  
-
-
-
