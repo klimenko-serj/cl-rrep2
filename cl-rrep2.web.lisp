@@ -3,7 +3,7 @@
 (defun rcfg-get-name (rcfg)
   (getf rcfg :name))
 ;;------------------------------------------------------------------------------
-(eval-when (:compile-toplevel)
+(eval-when (:compile-toplevel :load-toplevel)
   (defparameter *resources-dir*
     (merge-pathnames "resources/"
                      (asdf:component-pathname (asdf:find-system '#:cl-rrep2))))
@@ -17,6 +17,7 @@
 ;;------------------------------------------------------------------------------
 (defun reload-reports (&optional (dir *rcfg-dir*))
   (progn
+    (setf *rcfg-dir* dir)
     (setf *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
     (mapcar (lambda (x)
 	      (vector-push-extend (load-rcfg-from-file x) *rcfgs*))
@@ -77,6 +78,6 @@
 ;;------------------------------------------------------------------------------
 (defun rrep2.web-start (&optional (port 8080))
   (progn
-    (reload-reports)
+    (reload-reports (merge-pathnames "rcfg/" (first (directory ""))))
     (restas:start '#:cl-rrep2.web :port port)))
 ;;------------------------------------------------------------------------------
