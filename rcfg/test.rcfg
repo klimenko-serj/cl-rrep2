@@ -18,6 +18,7 @@
 			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))) 
  :report 
       ("<CENTER><H1> Тестовый отчет №1 </H1></CENTER>"
+      (:eval - (+ 1 2 (* 3 2)) 1)
         (:param :A
 	"<H2>" (:A :a1) ":" (:A :a2) "</H2>"
 	(:table :vertical
@@ -33,5 +34,5 @@
 	      (:query ("SELECT val FROM T2 WHERE t1_id = " (:T1 :id))
 	        :T2 (:val)
 	        (:cell :value (:T2 :val))))))
-	 (:cell :stretch 4 :value ("<CENTER>" (:summator :ids) "</CENTER>"))))
+	 (:cell :stretch 4 :value ("<CENTER>" (:eval if (> (:summator :ids) 4) ">" "<") "</CENTER>"))))
  	 ))

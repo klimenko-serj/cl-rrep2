@@ -326,14 +326,23 @@
 	 ((eq (caddr x) :set) (setf (gethash (cadr x) summators) (cadddr x)))))
      report)))
 ;;------------------------------------------------------------------------------
+;; EVAL	  
+;;------------------------------------------------------------------------------
+(defun update-evals (report)
+  (recmap (fnp-car-eq :eval) 
+	  #'(lambda (x)
+	      (eval (cdr x)))
+	  report))
+;;------------------------------------------------------------------------------
 ;; MAIN: GENERATE-HTML-REPORT	  
 ;;------------------------------------------------------------------------------
 (defun generate-html-report (rcfg params)
  (generate-html-report-rec
-  (update-summators
-   (update-queryes 
-    (update-params 
-     (update-macros (rcfg-get-report rcfg) (rcfg-get-macros rcfg))
-     (append-params-by-defaults params rcfg))
-    (rcfg-get-db rcfg)))))
+  (update-evals
+   (update-summators
+    (update-queryes 
+     (update-params 
+      (update-macros (rcfg-get-report rcfg) (rcfg-get-macros rcfg))
+      (append-params-by-defaults params rcfg))
+    (rcfg-get-db rcfg))))))
 ;;------------------------------------------------------------------------------
