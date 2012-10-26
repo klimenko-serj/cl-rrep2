@@ -1,6 +1,6 @@
 (:name "Тестовый отчет №1"
  :database (:host "localhost"
-	    :path "/work/db1.fdb"				
+	    :path "/home/db/1.fdb"				
 	    :user-name "SYSDBA"
 	    :password "masterkey")
  :macros (:T1 "T1")
@@ -18,21 +18,23 @@
 			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))) 
  :report 
       ("<CENTER><H1> Тестовый отчет №1 </H1></CENTER>"
-      (:eval - (+ 1 2 (* 3 2)) 1)
+      "(:eval - (+ 1 2 (* 3 2)) 1) -> " (:eval - (+ 1 2 (* 3 2)) 1)
         (:param :A
 	"<H2>" (:A :a1) ":" (:A :a2) "</H2>"
 	(:table :vertical
-	 (:summator :ids :clear)
+	 (:summator :vals :clear)
 	 (:query ("SELECT * FROM " (:macro :T1) " WHERE id <= " (:A :a2)) 
 	   :T1  (:id :name)
 	   (:layout :horizontal
 	     (:cell :value (:param :B))
 	     (:cell :value ("ID:" (:T1 :id)))
 	     (:cell :value (:T1 :name))
-	     (:summator :ids :add (:T1 :id))
+;;	     (:summator :ids :add (:T1 :id))
 	     (:layout :vertical
 	      (:query ("SELECT val FROM T2 WHERE t1_id = " (:T1 :id))
 	        :T2 (:val)
+                (:summator :vals :add (:T2 :val))
 	        (:cell :value (:T2 :val))))))
-	 (:cell :stretch 4 :value ("<CENTER>" (:eval if (> (:summator :ids) 4) ">" "<") "</CENTER>"))))
- 	 ))
+	 (:layout :horizontal
+                  (:cell :stretch 3 :value ("<CENTER><B> SUMM: </B> </CENTER>"))
+                  (:cell :value ("<CENTER>" (:summator :vals))))))))
