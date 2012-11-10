@@ -6,8 +6,10 @@
  :macros (:T1 "T1")
  :params (
  	  :B (:default ("B")
-	      :read-form (:type :text :caption "<B>Дата:</B>"))
- 	  :A (:default ((:query "SELECT * FROM T1" T1 (:a1 :a2)
+	      :read-form (:type :date :caption "<B>Дата:</B>"))
+          :C (:default ("C")
+	      :read-form (:type :date :caption "<B>Дата2:</B>"))
+          :A (:default ((:query "SELECT * FROM T1" T1 (:a1 :a2)
 	 		      (:a2 (T1 :a1) :A1 (T1 :a2))))
 	      :read-form (:type :checklist 
 	                  :caption "<B>Имена:</B>"
@@ -15,10 +17,23 @@
 			   ((:query "SELECT * FROM T1" T1 (:a1 :a2)
 			      (:key (T1 :a1) 
 			       :caption (T1 :a2)
-			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))) 
+			       :value (:a2 (T1 :a1) :A1 (T1 :a2)))))))             
+ 	  :D (:default ((:query "SELECT * FROM T1" T1 (:a1 :a2)
+	 		      (:a2 (T1 :a1) :A1 (T1 :a2))))
+	      :read-form (:type :checklist 
+	                  :caption "<B>Список 2:</B>"
+	 		  :list 
+			   ((:key "q1" 
+			     :caption "Element 1"
+			     :value "1")
+                            (:key "q2" 
+			     :caption "Element 2"
+			     :value "2"))))) 
+
  :report 
       ("<CENTER><H1> Тестовый отчет №1 </H1></CENTER>"
-      "(:eval - (+ 1 2 (* 3 2)) 1) -> " (:eval - (+ 1 2 (* 3 2)) 1)
+       "<HR>"
+       "<I>(:eval - (+ 1 2 (* 10 2)) 1)</I> <B>-></B> " (:eval - (+ 1 2 (* 10 2)) 1)
         (:param :A
 	"<H2>" (:A :a1) ":" (:A :a2) "</H2>"
 	(:table :vertical
@@ -29,12 +44,18 @@
 	     (:cell :value (:param :B))
 	     (:cell :value ("ID:" (:T1 :id)))
 	     (:cell :value (:T1 :name))
-;;	     (:summator :ids :add (:T1 :id))
+	     (:summator :local-vals :clear)
 	     (:layout :vertical
 	      (:query ("SELECT val FROM T2 WHERE t1_id = " (:T1 :id))
 	        :T2 (:val)
                 (:summator :vals :add (:T2 :val))
-	        (:cell :value (:T2 :val))))))
+                (:summator :local-vals :add (:T2 :val))
+	        (:cell :value (:T2 :val))))
+                (:cell :value ("<B>" (:summator :local-vals) "</B>"))))
 	 (:layout :horizontal
-                  (:cell :stretch 3 :value ("<CENTER><B> SUMM: </B> </CENTER>"))
-                  (:cell :value ("<CENTER>" (:summator :vals))))))))
+                  (:cell :stretch 4 :value ("<CENTER><B> SUMM: </B> </CENTER>"))
+                  (:cell :value ("<CENTER>" 
+                         (:eval if (> (:summator :vals) 1000)
+                                    (format nil "<div style='color:#ff0000'><I><B>~A</B></I></div>" 
+                                            (:summator :vals))
+                                    (:summator :vals)))))))))

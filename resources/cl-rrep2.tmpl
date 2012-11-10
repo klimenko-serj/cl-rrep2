@@ -2,57 +2,136 @@
 {namespace cl-rrep2.view}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Main template
+ * Reports list
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 {template main-frame}
- <html lang="ru" xml:lang="ru">
-    <head>
-       <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <meta name="keywords" content="rrep" />
-
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+ {\n}
+ <html lang="ru" xml:lang="ru"> {\n}
+ <link type="text/css" href="/resources/jquery-ui/css/ui-lightness/jquery-ui-1.9.1.custom.css" rel="Stylesheet" /> 
+ {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/jquery-1.8.2.js"></script> {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/jquery-ui-1.9.1.custom.min.js"></script> {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/i18n/jquery.ui.datepicker-ru.js"></script> {\n}
+     <head>  {\n}
+       <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  {\n}
+       <meta name="keywords" content="rrep" />
             {if $title}
-                <title>{$title}</title>
+                <title>{$title}</title> {\n}
             {/if}
-    
-    </head>
- <body>
-   <H1> Reports: </h1>
-   <ul>
+    </head> {\n}
+ <body>  {\n}
+   <H1> Отчеты: </h1> <HR> <a href='reload'>обновить список</a> 
+   <hr align="left" noshade size="1">  {\n}
+  <dl>
        {foreach $item in $reports}
-        <li>
-         <a href="{$item.href}"><B>{$item.name}</B></a>
-        </li>
+        <dt>  {\n}
+         <a href="{$item.href}"><B>{$item.name}</B></a>  {\n}
+        </dt>  {\n}
        {/foreach}
-   </ul>
- </body>
-</html>
+   </dl>
+ <script type="text/javascript">
+  {literal}
+   $("button, input:submit, a").button();
+  {/literal}
+ </script> 
+ </body>  {\n}
+</html> 
 {/template}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Parameters
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/* :text */
 
 {template param-text}
-<p>
- {$caption |noAutoescape} <input type='text' name='{$key}'>
-</p>
+ <p> {\n}
+  {$caption |noAutoescape} <input type='text' name='{$key}'>  {\n}
+ </p>  {\n}
 {/template}
 
-{template param-list}
-<table>
-	<tr><td collspan = 2>{$caption |noAutoescape}</td></tr>
-	{foreach $item in $list}
-   	 <tr>
-	  <td> <input type='checkbox' name='{$key}' value='{$item.key}'></td>
-	  <td> {$item.caption} </td>
-	 </tr>
-	{/foreach}
-</table>
+/* :date */
+
+{template param-date}
+ <p>  {\n}
+  {$caption |noAutoescape} <input type='text' name='{$key}' id='{$key}'>  {\n}
+ </p>  {\n}
+ <script>  {\n}
+  $.datepicker.setDefaults( $.datepicker.regional[""] );  {\n}
+  $("#{$key}").datepicker( $.datepicker.regional["ru"]);  {\n}
+  $("#{$key}").datepicker("option", "dateFormat", "dd.mm.yy");  {\n}
+ </script>  {\n}
 {/template}
+
+/* :checklist */
+{template param-list}
+{$caption |noAutoescape}
+<table>  {\n}
+        <tr> {\n}<td></td>  {\n}
+            <td> <button type='button' onclick="SelectAllInList('{$key}')"> Выделить все </button> </td>  {\n}
+            <td> <button type='button' onclick="UnSelectAllInList('{$key}')"> Снять выделение </button> </td>  {\n}
+        </tr>  {\n} 
+        {foreach $item in $list}
+   	 <tr>  {\n}
+	  <td> <input type='checkbox' name='{$key}' value='{$item.key}'></td>  {\n}
+	  <td> {$item.caption} </td>  {\n}
+	 </tr>  {\n}
+	{/foreach}
+</table>  {\n}
+{/template}
+
+/* PARAMETERS FORM */
 
 {template params-form}
- <H1> Params </H1>
- <form action="" method="post">
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+ {\n}
+ <html lang="ru" xml:lang="ru"> {\n}
+
+ <link type="text/css" href="/resources/jquery-ui/css/ui-lightness/jquery-ui-1.9.1.custom.css" rel="Stylesheet" /> 
+ {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/jquery-1.8.2.js"></script> {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/jquery-ui-1.9.1.custom.min.js"></script> {\n}
+ <script type="text/javascript" src="/resources/jquery-ui/js/i18n/jquery.ui.datepicker-ru.js"></script> {\n}
+ <script type="text/javascript">
+ {literal}
+  function SelectAllInList(key)
+  {        
+   var items = document.getElementsByName(key), i;
+   for (i = 0; i < items.length; ++i)
+   {
+    items[i].checked = true;   
+   }
+  }
+  function UnSelectAllInList(key)
+  {        
+   var items = document.getElementsByName(key), i;
+   for (i = 0; i < items.length; ++i)
+   {
+    items[i].checked = false;   
+   }
+  }
+ {/literal}
+ </script> {\n}
+ <body>
+ <p><a href="{$main}">К списку отчетов</a></p> {\n}
+ <hr>
+ <H1> Параметры отчета <I>"{$name}"</I>: </H1> {\n}
+ <form action="build" method="post"> {\n}
        {foreach $item in $params}
-	  {$item |noAutoescape}
+	  {$item |noAutoescape} {\n}
+          <hr noshade align="left" size="1">
        {/foreach}
-       <input type="submit" value ="Go!">
- </form>
+       <input type="submit" value ="Построить отчет">  {\n}
+ </form>  {\n}
+ <hr>
+ <p><a href="{$main}">К списку отчетов</a></p> {\n}
+ <script type="text/javascript">
+  {literal}
+   $("button, input:submit, a").button();
+  {/literal}
+ </script> 
+ </body>
+ </html> {\n}
 {/template}

@@ -11,13 +11,14 @@
                                      (merge-pathnames "cl-rrep2.tmpl"
                                                       *resources-dir*)))
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *rcfg-dir* (merge-pathnames "rcfg/" (first (directory "")))))
+  (defparameter *rcfg-directory* (merge-pathnames "rcfg/" (first (directory ""))))
+  (defparameter *resources-directory* (merge-pathnames "resources/" (first (directory "")))))
 ;;------------------------------------------------------------------------------
 (defparameter *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
 ;;------------------------------------------------------------------------------
-(defun reload-reports (&optional (dir *rcfg-dir*))
+(defun reload-reports (&optional (dir *rcfg-directory*))
   (progn
-    (setf *rcfg-dir* dir)
+    (setf *rcfg-directory* dir)
     (setf *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
     (mapcar (lambda (x)
 	      (vector-push-extend (load-rcfg-from-file x) *rcfgs*))
@@ -28,6 +29,9 @@
    (lambda (name val)
      (case (getf (getf val :read-form) :type)
        (:text (cl-rrep2.view:param-text 
+	       (list :key name 
+		     :caption (getf (getf val :read-form) :caption))))
+       (:date (cl-rrep2.view:param-date 
 	       (list :key name 
 		     :caption (getf (getf val :read-form) :caption))))
        (:checklist (cl-rrep2.view:param-list 
@@ -41,6 +45,7 @@
   (lambda (name val)
     (case (getf (getf val :read-form) :type)
       (:text (list name (cdr (assoc (symbol-name name) post-params :test #'string=))))
+      (:date (list name (cdr (assoc (symbol-name name) post-params :test #'string=))))
       (:checklist 
        (list name
 	     (remove-if #'NULL 
@@ -56,12 +61,16 @@
 ;;------------------------------------------------------------------------------
 (defun generate-param-form (rcfg)
     (cl-rrep2.view:params-form 
-     (list :params (build-params-forms-list (get-updated-params rcfg)))))
+     (list 
+      :main (restas:genurl 'rrep-main)
+      :name (rcfg-get-name rcfg)
+      :params (build-params-forms-list (get-updated-params rcfg)))))
 ;;------------------------------------------------------------------------------
-(restas:define-route rrep-param ("/:id")
+(restas:define-route rrep-param ("/:id/param")
   (generate-param-form (elt *rcfgs* (parse-integer id))))
 ;;------------------------------------------------------------------------------
-(restas:define-route rrep-build ("/:id" :method :post)
+(restas:define-route rrep-build ("/:id/build" :method :post)
+
   (generate-html-report 
    (elt *rcfgs* (parse-integer id))
    (get-params-from-post-params (get-updated-params 
@@ -75,6 +84,14 @@
 	 (loop for i from 0 to (- (length *rcfgs*) 1)
 	    collect (list :name (rcfg-get-name (elt *rcfgs* i))
 			  :href (restas:genurl 'rrep-param :id i))))))
+;;------------------------------------------------------------------------------
+(restas:define-route rrep-reload-reports ("/reload")
+  (progn (reload-reports)
+         (hunchentoot:redirect (restas:genurl 'rrep-main))))
+;;------------------------------------------------------------------------------
+(restas:mount-submodule -resources- (#:restas.directory-publisher)
+  (restas.directory-publisher:*baseurl* '("resources"))
+  (restas.directory-publisher:*directory* *resources-directory*))
 ;;------------------------------------------------------------------------------
 (defun rrep2.web-start (&optional (port 8080))
   (progn

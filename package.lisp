@@ -14,8 +14,10 @@
   (:use #:cl 
 	#:cl-rrep2 
 	#:closure-template)
-  (:export :reload-reports
-	   :rrep2.web-start
+  (:export :*resources-directory*
+           :*rcfg-directory*
+           :reload-reports
+           :rrep2.web-start
    ))
 ;;------------------------------------------------------------------------------
 
