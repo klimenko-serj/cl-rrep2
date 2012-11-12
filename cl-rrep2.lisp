@@ -55,6 +55,9 @@
 (defun rcfg-get-params (rcfg)
   (getf rcfg :params))
 ;;------------------------------------------------------------------------------
+(defun rcfg-get-name (rcfg)
+  (getf rcfg :name))
+;;------------------------------------------------------------------------------
 ;; TABLES (layouts)
 ;;------------------------------------------------------------------------------
 (defclass table-item ()
@@ -193,20 +196,6 @@
    (make-cells-table
     (make-table-main-layout rcfg-table))))
 ;;------------------------------------------------------------------------------
-(defun generate-html-report-rec (report)
-  (cond ((NULL report) "")
-	((stringp report) report)
-	((atom (car report))
-	 (format nil "~A~A" (car report)
-		 (generate-html-report-rec (cdr report))))
-	((listp report)
-	 (cond ((eq (caar report) :table)
-		(format nil "~A~A "
-			(make-table (cdar report)) 
-			(generate-html-report-rec (cdr report))))
-	       (T Nil)))
-	(T Nil)))
-;;------------------------------------------------------------------------------
 ;; MACROS
 ;;------------------------------------------------------------------------------
 (defun update-macros (report macros)
@@ -328,21 +317,42 @@
 ;;------------------------------------------------------------------------------
 ;; EVAL	  
 ;;------------------------------------------------------------------------------
-(defun update-evals (report)
+(defun update-evals (time-key report)
   (recmap (fnp-car-eq :eval) 
 	  #'(lambda (x)
-	      (eval (cdr x)))
+              (if (eq (second x) time-key)
+                  (eval (third x))
+                  x))
 	  report))
 ;;------------------------------------------------------------------------------
 ;; MAIN: GENERATE-HTML-REPORT	  
 ;;------------------------------------------------------------------------------
+(defun generate-html-report-rec (report)
+  (cond ((NULL report) "")
+	((stringp report) report)
+	((atom (car report))
+	 (format nil "~A~A" (car report)
+		 (generate-html-report-rec (cdr report))))
+	((listp report)
+	 (cond ((eq (caar report) :table)
+		(format nil "~A~A "
+			(make-table (cdar report)) 
+			(generate-html-report-rec (cdr report))))
+	       (T (format nil "~A~A" (car report)
+		 (generate-html-report-rec (cdr report))))))
+	(T Nil)))
+;;------------------------------------------------------------------------------
 (defun generate-html-report (rcfg params)
  (generate-html-report-rec
-  (update-evals
+  (update-evals 
+   :last
    (update-summators
-    (update-queryes 
-     (update-params 
-      (update-macros (rcfg-get-report rcfg) (rcfg-get-macros rcfg))
-      (append-params-by-defaults params rcfg))
-    (rcfg-get-db rcfg))))))
+    (update-queryes
+     (update-evals 
+      :on-parametrise
+      (update-params 
+       (update-macros (rcfg-get-report rcfg) 
+                      (rcfg-get-macros rcfg))
+       (append-params-by-defaults params rcfg)))
+      (rcfg-get-db rcfg))))))
 ;;------------------------------------------------------------------------------

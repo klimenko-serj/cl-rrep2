@@ -6,6 +6,7 @@
   (:export :generate-html-report
 	   :get-updated-params
 	   :load-rcfg-from-file
+           :rcfg-get-name
 	   :mapparams
 	   :mapparamsn
    ))
