@@ -1,8 +1,5 @@
 (in-package #:cl-rrep2.web)
 ;;------------------------------------------------------------------------------
-(defun rcfg-get-name (rcfg)
-  (getf rcfg :name))
-;;------------------------------------------------------------------------------
 (eval-when (:compile-toplevel :load-toplevel)
   (defparameter *resources-dir*
     (merge-pathnames "resources/"
@@ -11,18 +8,17 @@
                                      (merge-pathnames "cl-rrep2.tmpl"
                                                       *resources-dir*)))
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *rcfg-directory* (merge-pathnames "rcfg/" (first (directory ""))))
-  (defparameter *resources-directory* (merge-pathnames "resources/" (first (directory "")))))
+  (defparameter *rcfg-directory* (merge-pathnames "rcfg/" (first (directory "")))))
+
 ;;------------------------------------------------------------------------------
 (defparameter *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
 ;;------------------------------------------------------------------------------
-(defun reload-reports (&optional (dir *rcfg-directory*))
+(defun reload-reports ()
   (progn
-    (setf *rcfg-directory* dir)
     (setf *rcfgs* (make-array 5 :fill-pointer 0 :adjustable t))
     (mapcar (lambda (x)
 	      (vector-push-extend (load-rcfg-from-file x) *rcfgs*))
-	    (directory (merge-pathnames "*.rcfg" dir)))))
+	    (directory (merge-pathnames "*.rcfg" *rcfg-directory*)))))
 ;;------------------------------------------------------------------------------
 (defun build-params-forms-list (params)
   (mapparams 
@@ -32,6 +28,9 @@
 	       (list :key name 
 		     :caption (getf (getf val :read-form) :caption))))
        (:date (cl-rrep2.view:param-date 
+	       (list :key name 
+		     :caption (getf (getf val :read-form) :caption))))
+       (:checkbox (cl-rrep2.view:param-checkbox 
 	       (list :key name 
 		     :caption (getf (getf val :read-form) :caption))))
        (:checklist (cl-rrep2.view:param-list 
@@ -46,6 +45,7 @@
     (case (getf (getf val :read-form) :type)
       (:text (list name (cdr (assoc (symbol-name name) post-params :test #'string=))))
       (:date (list name (cdr (assoc (symbol-name name) post-params :test #'string=))))
+      (:checkbox (list name (if (member (cons (symbol-name name) "T") post-params :test #'equal) T Nil)))
       (:checklist 
        (list name
 	     (remove-if #'NULL 
@@ -91,10 +91,10 @@
 ;;------------------------------------------------------------------------------
 (restas:mount-submodule -resources- (#:restas.directory-publisher)
   (restas.directory-publisher:*baseurl* '("resources"))
-  (restas.directory-publisher:*directory* *resources-directory*))
+  (restas.directory-publisher:*directory* *resources-dir*))
 ;;------------------------------------------------------------------------------
 (defun rrep2.web-start (&optional (port 8080))
   (progn
-    (reload-reports (merge-pathnames "rcfg/" (first (directory ""))))
+    (reload-reports)
     (restas:start '#:cl-rrep2.web :port port)))
 ;;------------------------------------------------------------------------------

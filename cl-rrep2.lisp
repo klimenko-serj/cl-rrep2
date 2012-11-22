@@ -164,7 +164,7 @@
   (progn 
     (set-width-height-one lay)
     (loop for itm in items do
-	 (add-item lay (process-item itm (orientation lay))))
+	 (when itm (add-item lay (process-item itm (orientation lay)))))
     (update-layout-stretch lay)))
 ;;------------------------------------------------------------------------------
 (defun make-table-main-layout (params)
@@ -219,16 +219,24 @@
     (T (append (list (car lvars) (car lvals))
 	       (make-p-list (cdr lvars) (cdr lvals))))))
 ;;------------------------------------------------------------------------------
+(defun rrep-query-one (sql db)
+  (car (cl-fbclient:fb-query 
+         (make-string-by-list-or-string sql) 
+         :db db)))
+;;------------------------------------------------------------------------------
+;;------------------------------------------------------------------------------
 (defun rrep-with-query (body db)
-  (mapcan 
-   (lambda (qr)
-     (rrep-update-by-query-result 
-      (cadr body)
-      (make-p-list (caddr body) qr)
-      (cdddr body)))
-   (cl-fbclient:fb-query 
-    (make-string-by-list-or-string (car body)) 
-    :db db)))
+  (if (NULL (cdr body))
+      (rrep-query-one (car body) db)
+      (mapcan 
+       (lambda (qr)
+         (rrep-update-by-query-result 
+          (cadr body)
+          (make-p-list (caddr body) qr)
+          (cdddr body)))
+       (cl-fbclient:fb-query 
+        (make-string-by-list-or-string (car body)) 
+        :db db))))
 ;;------------------------------------------------------------------------------
 (defun update-queryes-rec (report db)
    (cond ((NULL report) Nil)
